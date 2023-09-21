@@ -1,1 +1,1 @@
-It doesn't actually compare to tailwind's class order, right now it just compares alphabetically
+Checks content inside class="" to see if it matches the tailwind class order (taken from headwind)
