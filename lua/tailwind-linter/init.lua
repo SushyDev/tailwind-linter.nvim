@@ -1,8 +1,7 @@
 local marks = require('tailwind-linter.marks')
 local sorter = require('tailwind-linter.sorter')
 local string = require('tailwind-linter.string')
-
-local class_list_order_raw = require('tailwind-linter.class_list_order')
+local order = require('tailwind-linter.order')
 
 local vim = vim or {}
 
@@ -15,11 +14,11 @@ local M = {
     },
 }
 
-local class_list_order = vim.json.decode(class_list_order_raw)
-local tailwind_linter_namespace = vim.api.nvim_create_namespace('tailwind_linter')
+local class_list_order = vim.json.decode(order)
+local namespace = vim.api.nvim_create_namespace('tailwind_linter')
 
 local function handleMatches(matches, bufnr)
-    marks.clear(bufnr, tailwind_linter_namespace)
+    marks.clear(bufnr, namespace)
 
     for _, match in ipairs(matches) do
         local class_list = string.split(match.text)
@@ -27,7 +26,7 @@ local function handleMatches(matches, bufnr)
         if not sorter.compareLists(class_list_order, class_list) then
             local message = M.options.prefix .. " " .. M.options.message
             local type = M.options.type
-            marks.create(bufnr, tailwind_linter_namespace, match.row, message, type)
+            marks.create(bufnr, namespace, match.row, message, type)
         end
     end
 end
