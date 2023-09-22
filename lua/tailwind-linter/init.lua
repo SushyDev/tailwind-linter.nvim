@@ -3,8 +3,6 @@ local sorter = require('tailwind-linter.sorter')
 local string = require('tailwind-linter.string')
 local order = require('tailwind-linter.order')
 
-local vim = vim or {}
-
 local M = {
     options = {
         prefix = "",

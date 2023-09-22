@@ -1,4 +1,3 @@
-local vim = vim or {}
 local M = {}
 
 M.clear = function(bufnr, namespace)
