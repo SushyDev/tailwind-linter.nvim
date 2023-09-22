@@ -41,7 +41,8 @@ function CheckClassOrder()
     local bufnr = vim.api.nvim_get_current_buf()
     local bufferLang = vim.api.nvim_buf_get_option(bufnr, 'filetype')
 
-    if bufferLang == "php" then
+    -- Hacky
+    if bufferLang ~= "html" then
         bufferLang = "html"
     end
 
