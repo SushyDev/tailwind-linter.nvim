@@ -38,16 +38,49 @@ local function compareSortOrder(base, items)
     return j > #items
 end
 
-M.compareLists = function(base, class_list)
-    -- Find the common items between the two lists
-    local commonItems = findCommonItems(base, class_list)
-
-    -- Check if the common items are in the same order in both lists
-    if not compareSortOrder(base, commonItems) then
-        return false
+local function indexOf(list, item)
+    for i, value in ipairs(list) do
+        if value == item then
+            return i
+        end
     end
 
-    return true
+    return -1
+end
+
+local function removeItem(list, item)
+    for i, value in ipairs(list) do
+        if value == item then
+            table.remove(list, i)
+            return
+        end
+    end
+end
+
+M.sort = function(base, class_list)
+    local commonItems = findCommonItems(base, class_list)
+
+    local sorted_class_list = vim.deepcopy(class_list)
+
+    table.sort(commonItems, function(a, b)
+        return indexOf(base, a) < indexOf(base, b)
+    end)
+
+    for _, item in ipairs(commonItems) do
+        removeItem(sorted_class_list, item)
+    end
+
+    for _, item in ipairs(commonItems) do
+        table.insert(sorted_class_list, item)
+    end
+
+    return sorted_class_list
+end
+
+M.compareLists = function(base, class_list)
+    local sorted = M.sort(base, class_list)
+
+    return compareSortOrder(class_list, sorted)
 end
 
 return M

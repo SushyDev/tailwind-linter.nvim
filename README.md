@@ -1,6 +1,9 @@
 # tailwind-linter.nvim
 Checks content inside class="" to see if it matches the tailwind class order (taken from headwind)
 
+### Fix sort order command
+`:TailwindLinterFix`
+
 ### Example install for lazy
 ```lua
 return {

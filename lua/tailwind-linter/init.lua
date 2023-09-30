@@ -15,6 +15,26 @@ local M = {
 local class_list_order = vim.json.decode(order)
 local namespace = vim.api.nvim_create_namespace('tailwind_linter')
 
+local query_html = [[
+    (attribute
+        (attribute_name) @_name (#eq? @_name "class")
+        (quoted_attribute_value (attribute_value) @value)
+    )
+]]
+
+local function fixMatches(matches, bufnr)
+    for _, match in ipairs(matches) do
+        local class_list = string.split(match.text)
+
+        local sorted = sorter.sort(class_list_order, class_list)
+        local text = table.concat(sorted, " ")
+
+        vim.api.nvim_buf_set_text(bufnr, match.start_row, match.start_col, match.end_row, match.end_col, { text })
+    end
+
+    marks.clear(bufnr, namespace)
+end
+
 local function handleMatches(matches, bufnr)
     marks.clear(bufnr, namespace)
 
@@ -24,19 +44,12 @@ local function handleMatches(matches, bufnr)
         if not sorter.compareLists(class_list_order, class_list) then
             local message = M.options.prefix .. " " .. M.options.message
             local type = M.options.type
-            marks.create(bufnr, namespace, match.row, message, type)
+            marks.create(bufnr, namespace, match.start_row, message, type)
         end
     end
 end
 
-local query_html = [[
-    (attribute
-        (attribute_name) @_name (#eq? @_name "class")
-        (quoted_attribute_value (attribute_value) @value)
-    )
-]]
-
-function CheckClassOrder()
+function CheckClassOrder(fix)
     -- Buffer
     local bufnr = vim.api.nvim_get_current_buf()
     local bufferLang = vim.api.nvim_buf_get_option(bufnr, 'filetype')
@@ -64,14 +77,24 @@ function CheckClassOrder()
         for id, node in pairs(match) do
             if query.captures[id] == "value" then
                 local text = vim.treesitter.get_node_text(node, bufnr)
-                local row = node:range()
+                local start_row, start_col, end_row, end_col = node:range()
 
-                table.insert(matches, { text = text, row = row })
+                table.insert(matches, {
+                    text = text,
+                    start_row = start_row,
+                    start_col = start_col,
+                    end_row = end_row,
+                    end_col = end_col,
+                })
             end
         end
     end
 
-    handleMatches(matches, bufnr)
+    if fix then 
+        fixMatches(matches, bufnr)
+    else
+        handleMatches(matches, bufnr)
+    end
 end
 
 function M.setup(opts)
@@ -83,9 +106,11 @@ function M.setup(opts)
     vim.cmd([[
     augroup AutoSave
         autocmd!
-        autocmd BufRead,BufEnter,BufWritePost *.]] .. languages .. [[ lua CheckClassOrder()
+        autocmd BufRead,BufEnter,BufWritePost *.]] .. languages .. [[ lua CheckClassOrder(false)
     augroup END
     ]])
+
+    vim.cmd("command! TailwindLinterFix lua CheckClassOrder(true)")
 end
 
 return M
